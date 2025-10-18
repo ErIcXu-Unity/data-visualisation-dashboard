@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id               String        @id
+  name             String
+  openingInventory Int
+  dailyRecords     DailyRecord[]
+}
+
+model DailyRecord {
+  id               Int     @id @default(autoincrement())
+  day              Int
+  procurementQty   Int
+  procurementPrice Float
+  salesQty         Int
+  salesPrice       Float
+  inventory        Int
+  product          Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId        String
+
+  @@unique([productId, day])
+}

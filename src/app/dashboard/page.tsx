@@ -1,17 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import ProductSelector from '@/components/ProductSelector'
 import ChartDisplay from '@/components/ChartDisplay'
 import ExcelUpload from '@/components/ExcelUpload'
 import { Product, ProductDetail } from '@/types/product'
 
 export default function DashboardPage() {
+  const { data: session } = useSession()
   const [products, setProducts] = useState<Product[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [productDetails, setProductDetails] = useState<ProductDetail[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingChart, setLoadingChart] = useState(false)
 
   const fetchProducts = () => {
     setLoading(true)
@@ -31,18 +33,22 @@ export default function DashboardPage() {
     fetchProducts()
   }, [])
 
+  // Fetch detailed data when product selection changes
   useEffect(() => {
     if (selectedIds.length === 0) {
       setProductDetails([])
+      setLoadingChart(false)
       return
     }
 
+    setLoadingChart(true)
     Promise.all(
       selectedIds.map((id) =>
         fetch(`/api/products/${id}`).then((res) => res.json())
       )
     ).then((details) => {
       setProductDetails(details)
+      setLoadingChart(false)
     })
   }, [selectedIds])
 
@@ -65,12 +71,18 @@ export default function DashboardPage() {
                 Analyze procurement, sales, and inventory history
               </p>
             </div>
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Sign Out
-            </button>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Signed in as</p>
+                <p className="text-sm font-medium text-gray-900">{session?.user?.name}</p>
+              </div>
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -88,7 +100,7 @@ export default function DashboardPage() {
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
           />
-          <ChartDisplay products={productDetails} />
+          <ChartDisplay products={productDetails} loading={loadingChart} />
         </div>
       </main>
     </div>

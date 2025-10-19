@@ -15,6 +15,7 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Validate file type
     const allowedTypes = [
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'application/vnd.ms-excel',
@@ -30,6 +31,7 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
     setError('')
     setSuccess('')
 
+    // Upload file to server
     const formData = new FormData()
     formData.append('file', file)
 
@@ -49,6 +51,7 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
       setSuccess(`Successfully imported ${data.productsCount} products`)
       onUploadSuccess()
       
+      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess('')
       }, 3000)
@@ -68,7 +71,7 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
         <div>
           <label
             htmlFor="file-upload"
-            className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
             <span>{uploading ? 'Uploading...' : 'Choose File'}</span>
             <input

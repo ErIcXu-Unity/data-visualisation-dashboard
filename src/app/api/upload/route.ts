@@ -12,6 +12,7 @@ interface ProductRow {
   salesPrice: number[]
 }
 
+// Parse price strings removing currency symbols and commas
 function parsePrice(value: any): number {
   if (typeof value === 'number') return value
   if (typeof value === 'string') {
@@ -24,6 +25,7 @@ function parseNumber(value: any): number {
   return parseInt(value) || 0
 }
 
+// Extract product data from Excel worksheet
 function parseExcelData(worksheet: XLSX.WorkSheet): ProductRow[] {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[]
   const products: ProductRow[] = []
@@ -87,13 +89,16 @@ export async function POST(request: Request) {
       )
     }
 
+    // Use transaction to ensure data consistency
     await prisma.$transaction(async (tx) => {
       for (const product of products) {
         let currentInventory = product.openingInventory
 
+        // Calculate inventory for each day
         const dailyRecords = []
         for (let day = 1; day <= 3; day++) {
           const idx = day - 1
+          // Inventory = Previous Inventory + Procurement - Sales
           currentInventory =
             currentInventory + product.procurementQty[idx] - product.salesQty[idx]
 
@@ -107,6 +112,7 @@ export async function POST(request: Request) {
           })
         }
 
+        // Upsert: update if exists, create if not
         await tx.product.upsert({
           where: { id: product.id },
           update: {

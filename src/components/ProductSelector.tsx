@@ -35,7 +35,7 @@ export default function ProductSelector({
         <h2 className="text-xl font-semibold text-gray-900">Select Products</h2>
         <button
           onClick={handleSelectAll}
-          className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 border border-blue-600 rounded-md hover:bg-blue-50"
+          className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors cursor-pointer"
         >
           {selectedIds.length === products.length ? 'Deselect All' : 'Select All'}
         </button>
@@ -44,13 +44,13 @@ export default function ProductSelector({
         {products.map((product) => (
           <label
             key={product.id}
-            className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
+            className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-colors"
           >
             <input
               type="checkbox"
               checked={selectedIds.includes(product.id)}
               onChange={() => handleToggle(product.id)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
             />
             <span className="ml-3 text-sm text-gray-700">{product.name}</span>
           </label>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { signOut } from 'next-auth/react'
 import ProductSelector from '@/components/ProductSelector'
 import ChartDisplay from '@/components/ChartDisplay'
+import ExcelUpload from '@/components/ExcelUpload'
 import { Product, ProductDetail } from '@/types/product'
 
 export default function DashboardPage() {
@@ -12,7 +13,8 @@ export default function DashboardPage() {
   const [productDetails, setProductDetails] = useState<ProductDetail[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const fetchProducts = () => {
+    setLoading(true)
     fetch('/api/products')
       .then((res) => res.json())
       .then((data) => {
@@ -23,6 +25,10 @@ export default function DashboardPage() {
         console.error('Failed to fetch products:', error)
         setLoading(false)
       })
+  }
+
+  useEffect(() => {
+    fetchProducts()
   }, [])
 
   useEffect(() => {
@@ -71,6 +77,12 @@ export default function DashboardPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
+          <ExcelUpload
+            onUploadSuccess={() => {
+              fetchProducts()
+              setSelectedIds([])
+            }}
+          />
           <ProductSelector
             products={products}
             selectedIds={selectedIds}

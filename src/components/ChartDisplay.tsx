@@ -16,6 +16,12 @@ import {
 interface ChartDisplayProps {
   products: ProductDetail[]
   loading?: boolean
+  lineTypes?: {
+    inventory: boolean
+    procurement: boolean
+    sales: boolean
+  }
+  onLineTypesChange?: (types: { inventory: boolean; procurement: boolean; sales: boolean }) => void
 }
 
 // Color scheme for different product lines
@@ -50,7 +56,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   )
 }
 
-export default function ChartDisplay({ products, loading = false }: ChartDisplayProps) {
+export default function ChartDisplay({ 
+  products, 
+  loading = false,
+  lineTypes = { inventory: true, procurement: true, sales: true },
+  onLineTypesChange
+}: ChartDisplayProps) {
+  const toggleType = (type: 'inventory' | 'procurement' | 'sales') => {
+    onLineTypesChange?.({
+      ...lineTypes,
+      [type]: !lineTypes[type],
+    })
+  }
   // Loading state
   if (loading) {
     return (
@@ -99,14 +116,64 @@ export default function ChartDisplay({ products, loading = false }: ChartDisplay
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">{dynamicTitle}</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          {productNames.length === 1 ? 'Daily' : 'Comparative'} analysis over 3 days
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">{dynamicTitle}</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {productNames.length === 1 ? 'Daily' : 'Comparative'} analysis over 3 days
+          </p>
+        </div>
+        
+        {/* Type selector buttons */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => toggleType('inventory')}
+            className={`px-3 py-2 rounded-md border-2 transition-all text-xs font-medium ${
+              lineTypes.inventory
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+            }`}
+            title="Toggle Inventory"
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span>Inventory</span>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => toggleType('procurement')}
+            className={`px-3 py-2 rounded-md border-2 transition-all text-xs font-medium ${
+              lineTypes.procurement
+                ? 'border-green-500 bg-green-50 text-green-700'
+                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+            }`}
+            title="Toggle Procurement"
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span>Procurement</span>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => toggleType('sales')}
+            className={`px-3 py-2 rounded-md border-2 transition-all text-xs font-medium ${
+              lineTypes.sales
+                ? 'border-red-500 bg-red-50 text-red-700'
+                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+            }`}
+            title="Toggle Sales"
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+              <span>Sales</span>
+            </div>
+          </button>
+        </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={500}>
+      <ResponsiveContainer width="100%" height={600}>
         <LineChart data={chartData} margin={{ top: 5, right: 60, left: 20, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           
@@ -146,37 +213,43 @@ export default function ChartDisplay({ products, loading = false }: ChartDisplay
             return (
               <React.Fragment key={product.id}>
                 {/* Inventory line uses left Y-axis */}
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey={`${product.name}_inventory`}
-                  stroke={colorSet.inventory}
-                  strokeWidth={2}
-                  name={`${product.name} - Inventory`}
-                  dot={{ r: 4, strokeWidth: 2 }}
-                  activeDot={{ r: 6 }}
-                />
+                {lineTypes.inventory && (
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey={`${product.name}_inventory`}
+                    stroke={colorSet.inventory}
+                    strokeWidth={2.5}
+                    name={`${product.name} - Inventory`}
+                    dot={{ r: 5, strokeWidth: 2 }}
+                    activeDot={{ r: 7 }}
+                  />
+                )}
                 {/* Procurement and Sales lines use right Y-axis */}
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey={`${product.name}_procurement`}
-                  stroke={colorSet.procurement}
-                  strokeWidth={2}
-                  name={`${product.name} - Procurement Amount`}
-                  dot={{ r: 4, strokeWidth: 2 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey={`${product.name}_sales`}
-                  stroke={colorSet.sales}
-                  strokeWidth={2}
-                  name={`${product.name} - Sales Amount`}
-                  dot={{ r: 4, strokeWidth: 2 }}
-                  activeDot={{ r: 6 }}
-                />
+                {lineTypes.procurement && (
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey={`${product.name}_procurement`}
+                    stroke={colorSet.procurement}
+                    strokeWidth={2.5}
+                    name={`${product.name} - Procurement Amount`}
+                    dot={{ r: 5, strokeWidth: 2 }}
+                    activeDot={{ r: 7 }}
+                  />
+                )}
+                {lineTypes.sales && (
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey={`${product.name}_sales`}
+                    stroke={colorSet.sales}
+                    strokeWidth={2.5}
+                    name={`${product.name} - Sales Amount`}
+                    dot={{ r: 5, strokeWidth: 2 }}
+                    activeDot={{ r: 7 }}
+                  />
+                )}
               </React.Fragment>
             )
           })}

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import * as fs from 'fs'
 import * as path from 'path'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -67,6 +68,18 @@ async function main() {
   await prisma.product.deleteMany()
   await prisma.user.deleteMany()
 
+  // Create demo user first with hashed password
+  const hashedPassword = await bcrypt.hash('demo123', 10)
+  const demoUser = await prisma.user.create({
+    data: {
+      name: 'Demo User',
+      email: 'demo@example.com',
+      password: hashedPassword
+    }
+  })
+
+  console.log('Created demo user (email: demo@example.com, password: demo123)')
+
   const csvPath = path.join(process.cwd(), 'ProductData.csv')
   const csvContent = fs.readFileSync(csvPath, 'utf-8')
   const products = parseCsv(csvContent)
@@ -97,6 +110,7 @@ async function main() {
         id: product.id,
         name: product.name,
         openingInventory: product.openingInventory,
+        userId: demoUser.id,
         dailyRecords: {
           create: dailyRecords
         }
@@ -105,14 +119,6 @@ async function main() {
 
     console.log(`Created product: ${product.name}`)
   }
-
-  await prisma.user.create({
-    data: {
-      name: 'Admin',
-      email: 'admin@example.com',
-      password: 'admin123'
-    }
-  })
 
   console.log('Seed completed successfully')
 }

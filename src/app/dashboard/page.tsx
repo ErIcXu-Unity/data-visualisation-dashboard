@@ -14,6 +14,11 @@ export default function DashboardPage() {
   const [productDetails, setProductDetails] = useState<ProductDetail[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingChart, setLoadingChart] = useState(false)
+  const [lineTypes, setLineTypes] = useState({
+    inventory: true,
+    procurement: true,
+    sales: true,
+  })
 
   const fetchProducts = () => {
     setLoading(true)
@@ -95,12 +100,19 @@ export default function DashboardPage() {
               setSelectedIds([])
             }}
           />
+          
           <ProductSelector
             products={products}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
           />
-          <ChartDisplay products={productDetails} loading={loadingChart} />
+          
+          <ChartDisplay 
+            products={productDetails} 
+            loading={loadingChart}
+            lineTypes={lineTypes}
+            onLineTypesChange={setLineTypes}
+          />
         </div>
       </main>
     </div>

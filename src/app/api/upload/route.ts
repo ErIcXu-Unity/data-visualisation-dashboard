@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
 
 interface ProductRow {
   id: string
@@ -70,6 +71,15 @@ function parseExcelData(worksheet: XLSX.WorkSheet): ProductRow[] {
 
 export async function POST(request: Request) {
   try {
+    const session = await auth()
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File
 
@@ -114,7 +124,12 @@ export async function POST(request: Request) {
 
         // Upsert: update if exists, create if not
         await tx.product.upsert({
-          where: { id: product.id },
+          where: { 
+            userId_id: {
+              userId: session.user.id,
+              id: product.id
+            }
+          },
           update: {
             name: product.name,
             openingInventory: product.openingInventory,
@@ -127,6 +142,7 @@ export async function POST(request: Request) {
             id: product.id,
             name: product.name,
             openingInventory: product.openingInventory,
+            userId: session.user.id,
             dailyRecords: {
               create: dailyRecords,
             },

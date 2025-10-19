@@ -64,29 +64,30 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Import Data</h2>
+    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-900">Import Data</h2>
+        <p className="text-sm text-gray-500 mt-1">Upload Excel or CSV file to update products</p>
+      </div>
       
       <div className="space-y-4">
-        <div>
-          <label
-            htmlFor="file-upload"
-            className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
-            <span>{uploading ? 'Uploading...' : 'Choose File'}</span>
-            <input
-              id="file-upload"
-              type="file"
-              className="sr-only"
-              accept=".xlsx,.xls,.csv"
-              onChange={handleFileChange}
-              disabled={uploading}
-            />
-          </label>
-          <p className="mt-2 text-sm text-gray-500">
-            Supported formats: Excel (.xlsx, .xls) or CSV (.csv)
-          </p>
-        </div>
+        <label
+          htmlFor="file-upload"
+          className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+        >
+          <span>{uploading ? 'Uploading...' : 'Choose File'}</span>
+          <input
+            id="file-upload"
+            type="file"
+            className="sr-only"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
+        </label>
+        <p className="text-sm text-gray-500">
+          Supported formats: Excel (.xlsx, .xls) or CSV (.csv)
+        </p>
 
         {error && (
           <div className="rounded-md bg-red-50 border border-red-200 p-4">

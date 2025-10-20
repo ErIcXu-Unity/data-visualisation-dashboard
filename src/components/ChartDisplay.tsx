@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { ProductDetail } from '@/types/product'
 import {
   LineChart,
@@ -62,6 +63,38 @@ export default function ChartDisplay({
   lineTypes = { inventory: true, procurement: true, sales: true },
   onLineTypesChange
 }: ChartDisplayProps) {
+  const [insights, setInsights] = useState<string>('')
+  const [insightsLoading, setInsightsLoading] = useState(false)
+  const [insightsError, setInsightsError] = useState<string>('')
+  const [showInsights, setShowInsights] = useState(false)
+
+  // Generate AI insights
+  const generateInsights = async () => {
+    setInsightsLoading(true)
+    setInsightsError('')
+    
+    try {
+      const response = await fetch('/api/ai/insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate insights')
+      }
+
+      setInsights(data.insights)
+      setShowInsights(true)
+    } catch (error: any) {
+      setInsightsError(error.message)
+    } finally {
+      setInsightsLoading(false)
+    }
+  }
+
   const toggleType = (type: 'inventory' | 'procurement' | 'sales') => {
     onLineTypesChange?.({
       ...lineTypes,
@@ -261,6 +294,104 @@ export default function ChartDisplay({
           <span className="font-medium">Note:</span> Inventory (left axis) shows quantity in units. 
           Procurement and Sales Amounts (right axis) show monetary values in dollars.
         </p>
+      </div>
+
+      {/* AI Insights Section */}
+      <div className="mt-6 border-t border-gray-200 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <h3 className="text-lg font-semibold text-gray-900">AI Data Insights</h3>
+          </div>
+          
+          <button
+            onClick={generateInsights}
+            disabled={insightsLoading || products.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+          >
+            {insightsLoading ? (
+              <>
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Analyzing...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Generate Insights</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Error Message */}
+        {insightsError && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm text-red-800 font-medium">{insightsError}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Insights Display */}
+        {showInsights && insights && (
+          <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-1">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">Analysis Results</h4>
+                <div className="prose prose-sm max-w-none text-gray-700">
+                  <ReactMarkdown
+                    components={{
+                      // Style headings
+                      h1: ({ children }: any) => <h1 className="text-xl font-bold text-gray-900 mt-4 mb-2">{children}</h1>,
+                      h2: ({ children }: any) => <h2 className="text-lg font-bold text-gray-900 mt-3 mb-2">{children}</h2>,
+                      h3: ({ children }: any) => <h3 className="text-base font-bold text-gray-900 mt-2 mb-1">{children}</h3>,
+                      // Style paragraphs
+                      p: ({ children }: any) => <p className="mb-3 text-gray-700 leading-relaxed">{children}</p>,
+                      // Style lists
+                      ul: ({ children }: any) => <ul className="list-disc list-inside space-y-2 mb-3">{children}</ul>,
+                      ol: ({ children }: any) => <ol className="list-decimal list-inside space-y-2 mb-3">{children}</ol>,
+                      li: ({ children }: any) => <li className="text-gray-700 ml-2">{children}</li>,
+                      // Style strong/bold text
+                      strong: ({ children }: any) => <strong className="font-bold text-gray-900">{children}</strong>,
+                      // Style emphasis/italic
+                      em: ({ children }: any) => <em className="italic text-gray-800">{children}</em>,
+                      // Style code
+                      code: ({ children }: any) => <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-blue-600">{children}</code>,
+                    }}
+                  >
+                    {insights}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!showInsights && !insightsError && products.length > 0 && (
+          <div className="text-center py-8 px-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No insights generated yet</h3>
+            <p className="mt-1 text-sm text-gray-500">Click &quot;Generate Insights&quot; to get AI-powered analysis of your data</p>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -48,8 +48,8 @@ export async function POST(request: Request) {
         totalSales: totalSales.toFixed(2),
         totalProcurement: totalProcurement.toFixed(2),
         inventoryTrend,
-        salesTrend: product.history.map((day: any) => day.salesAmount),
-        procurementTrend: product.history.map((day: any) => day.procurementAmount),
+        salesTrend: product.history.map((day: DayRecord) => day.salesAmount),
+        procurementTrend: product.history.map((day: DayRecord) => day.procurementAmount),
       }
     })
 

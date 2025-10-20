@@ -48,7 +48,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
       <p className="font-semibold text-gray-900 mb-2">Day {label}</p>
       <div className="space-y-1">
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index: number) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div
               className="w-3 h-3 rounded-full"

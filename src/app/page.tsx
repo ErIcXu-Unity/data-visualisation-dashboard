@@ -7,7 +7,7 @@ export default function HomePage() {
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Data Visualization Dashboard
+            AIBUILD Analytics
           </h1>
           <p className="text-gray-600 mt-4">
             Analyze procurement, sales, and inventory history for retail management

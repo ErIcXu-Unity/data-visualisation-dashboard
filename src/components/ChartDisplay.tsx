@@ -34,8 +34,14 @@ const COLORS = [
   { inventory: '#0ea5e9', procurement: '#eab308', sales: '#e11d48' },
 ]
 
+interface TooltipProps {
+  active?: boolean
+  payload?: Array<{ name: string; value: number; color: string }>
+  label?: string | number
+}
+
 // Custom Tooltip component for better data display
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (!active || !payload || !payload.length) return null
 
   return (
@@ -88,8 +94,8 @@ export default function ChartDisplay({
 
       setInsights(data.insights)
       setShowInsights(true)
-    } catch (error: any) {
-      setInsightsError(error.message)
+    } catch (error) {
+      setInsightsError(error instanceof Error ? error.message : 'Failed to generate insights')
     } finally {
       setInsightsLoading(false)
     }
@@ -356,22 +362,16 @@ export default function ChartDisplay({
                 <div className="prose prose-sm max-w-none text-gray-700">
                   <ReactMarkdown
                     components={{
-                      // Style headings
-                      h1: ({ children }: any) => <h1 className="text-xl font-bold text-gray-900 mt-4 mb-2">{children}</h1>,
-                      h2: ({ children }: any) => <h2 className="text-lg font-bold text-gray-900 mt-3 mb-2">{children}</h2>,
-                      h3: ({ children }: any) => <h3 className="text-base font-bold text-gray-900 mt-2 mb-1">{children}</h3>,
-                      // Style paragraphs
-                      p: ({ children }: any) => <p className="mb-3 text-gray-700 leading-relaxed">{children}</p>,
-                      // Style lists
-                      ul: ({ children }: any) => <ul className="list-disc list-inside space-y-2 mb-3">{children}</ul>,
-                      ol: ({ children }: any) => <ol className="list-decimal list-inside space-y-2 mb-3">{children}</ol>,
-                      li: ({ children }: any) => <li className="text-gray-700 ml-2">{children}</li>,
-                      // Style strong/bold text
-                      strong: ({ children }: any) => <strong className="font-bold text-gray-900">{children}</strong>,
-                      // Style emphasis/italic
-                      em: ({ children }: any) => <em className="italic text-gray-800">{children}</em>,
-                      // Style code
-                      code: ({ children }: any) => <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-blue-600">{children}</code>,
+                      h1: ({ children }) => <h1 className="text-xl font-bold text-gray-900 mt-4 mb-2">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-lg font-bold text-gray-900 mt-3 mb-2">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-base font-bold text-gray-900 mt-2 mb-1">{children}</h3>,
+                      p: ({ children }) => <p className="mb-3 text-gray-700 leading-relaxed">{children}</p>,
+                      ul: ({ children }) => <ul className="list-disc list-inside space-y-2 mb-3">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal list-inside space-y-2 mb-3">{children}</ol>,
+                      li: ({ children }) => <li className="text-gray-700 ml-2">{children}</li>,
+                      strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
+                      em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
+                      code: ({ children }) => <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-blue-600">{children}</code>,
                     }}
                   >
                     {insights}

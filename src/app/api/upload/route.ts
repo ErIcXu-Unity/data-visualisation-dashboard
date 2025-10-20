@@ -14,7 +14,7 @@ interface ProductRow {
 }
 
 // Parse price strings removing currency symbols and commas
-function parsePrice(value: any): number {
+function parsePrice(value: string | number): number {
   if (typeof value === 'number') return value
   if (typeof value === 'string') {
     return parseFloat(value.replace(/[$,\s]/g, '')) || 0
@@ -22,13 +22,14 @@ function parsePrice(value: any): number {
   return 0
 }
 
-function parseNumber(value: any): number {
-  return parseInt(value) || 0
+function parseNumber(value: string | number): number {
+  if (typeof value === 'number') return value
+  return parseInt(String(value)) || 0
 }
 
 // Extract product data from Excel worksheet
 function parseExcelData(worksheet: XLSX.WorkSheet): ProductRow[] {
-  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[]
+  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as (string | number)[][]
   const products: ProductRow[] = []
 
   for (let i = 1; i < data.length; i++) {

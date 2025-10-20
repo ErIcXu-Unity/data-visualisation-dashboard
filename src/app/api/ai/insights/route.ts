@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
+interface DayRecord {
+  salesAmount: number
+  procurementAmount: number
+  inventory: number
+}
+
+interface ProductData {
+  name: string
+  id: string
+  openingInventory: number
+  history: DayRecord[]
+}
+
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -22,10 +35,10 @@ export async function POST(request: Request) {
     }
 
     // Prepare data summary for AI
-    const dataSummary = products.map((product: any) => {
-      const totalSales = product.history.reduce((sum: number, day: any) => sum + day.salesAmount, 0)
-      const totalProcurement = product.history.reduce((sum: number, day: any) => sum + day.procurementAmount, 0)
-      const inventoryTrend = product.history.map((day: any) => day.inventory)
+    const dataSummary = products.map((product: ProductData) => {
+      const totalSales = product.history.reduce((sum: number, day: DayRecord) => sum + day.salesAmount, 0)
+      const totalProcurement = product.history.reduce((sum: number, day: DayRecord) => sum + day.procurementAmount, 0)
+      const inventoryTrend = product.history.map((day: DayRecord) => day.inventory)
       
       return {
         name: product.name,
@@ -76,18 +89,19 @@ Keep the response professional, concise, and under 200 words. Use bullet points 
       insights,
       tokensUsed: completion.usage?.total_tokens || 0,
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('AI insights error:', error)
     
     // Handle specific OpenAI errors
-    if (error?.status === 401) {
+    const err = error as { status?: number }
+    if (err?.status === 401) {
       return NextResponse.json(
         { error: 'Invalid OpenAI API key. Please check your configuration.' },
         { status: 500 }
       )
     }
     
-    if (error?.status === 429) {
+    if (err?.status === 429) {
       return NextResponse.json(
         { error: 'API rate limit exceeded. Please try again later.' },
         { status: 429 }

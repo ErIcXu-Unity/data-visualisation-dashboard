@@ -71,7 +71,7 @@ export default function ProductSelector({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
         {filteredProducts.length === 0 ? (
           <div className="col-span-full text-center py-8 text-gray-500">
-            No products found matching "{searchQuery}"
+            No products found matching &quot;{searchQuery}&quot;
           </div>
         ) : (
           filteredProducts.map((product) => (

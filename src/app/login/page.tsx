@@ -30,7 +30,7 @@ export default function LoginPage() {
         router.push('/dashboard')
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.')
     } finally {
       setLoading(false)
@@ -163,7 +163,7 @@ export default function LoginPage() {
 
             {/* Sign up link */}
             <div className="text-center text-sm pt-2">
-              <span className="text-gray-600">Don't have an account? </span>
+              <span className="text-gray-600">Don&apos;t have an account? </span>
               <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-500 transition-colors">
                 Sign up
               </Link>

@@ -55,7 +55,7 @@ export default function ExcelUpload({ onUploadSuccess }: ExcelUploadProps) {
       setTimeout(() => {
         setSuccess('')
       }, 3000)
-    } catch (err) {
+    } catch {
       setError('An error occurred during upload')
     } finally {
       setUploading(false)

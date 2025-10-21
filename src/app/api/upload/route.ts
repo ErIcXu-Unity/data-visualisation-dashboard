@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
 
+export const maxDuration = 30
+
 interface ProductRow {
   id: string
   name: string

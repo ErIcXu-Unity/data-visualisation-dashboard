@@ -3,13 +3,9 @@ import * as XLSX from 'xlsx'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
+
 export const runtime = 'nodejs'
 export const maxDuration = 60
-
-function toErrorString(e: unknown): string {
-  if (e instanceof Error) return `${e.name}: ${e.message}`
-  return String(e)
-}
 
 interface ProductRow {
   id: string
@@ -80,81 +76,81 @@ function parseExcelData(worksheet: XLSX.WorkSheet): ProductRow[] {
 
 export async function POST(request: Request) {
   try {
-    let session
-    try {
-      session = await auth()
-    } catch (e: unknown) {
-      return NextResponse.json({ where: 'auth()', error: toErrorString(e) }, { status: 500 })
+    const session = await auth()
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const formData = await request.formData()
     const file = formData.get('file') as File | null
-    if (!file) return NextResponse.json({ error: 'No file' }, { status: 400 })
-
-    let products
-    try {
-      const buffer = Buffer.from(await file.arrayBuffer())
-      const wb = XLSX.read(buffer, { type: 'buffer' })
-      const ws = wb.Sheets[wb.SheetNames[0]]
-      products = parseExcelData(ws)
-    } catch (e: unknown) {
-      return NextResponse.json({ where: 'xlsx', error: toErrorString(e) }, { status: 500 })
+    
+    if (!file) {
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
-    if (!products?.length) return NextResponse.json({ error: 'No valid products' }, { status: 400 })
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const wb = XLSX.read(buffer, { type: 'buffer' })
+    const ws = wb.Sheets[wb.SheetNames[0]]
+    const products = parseExcelData(ws)
 
-    try {
-      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-        // Delete all existing products for this user (cascade deletes daily records)
-        await tx.product.deleteMany({
-          where: { userId: session.user.id }
-        })
+    if (!products?.length) {
+      return NextResponse.json({ error: 'No valid products found in file' }, { status: 400 })
+    }
 
-        // Prepare all products with their daily records
-        const productsToCreate = products.map(product => {
-          let currentInventory = product.openingInventory
-          const dailyRecords = []
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Delete all existing products for this user (cascade deletes daily records)
+      await tx.product.deleteMany({
+        where: { userId: session.user.id }
+      })
 
-          for (let day = 1; day <= 3; day++) {
-            const idx = day - 1
-            currentInventory = currentInventory + product.procurementQty[idx] - product.salesQty[idx]
+      // Prepare all products with their daily records
+      const productsToCreate = products.map(product => {
+        let currentInventory = product.openingInventory
+        const dailyRecords = []
 
-            dailyRecords.push({
-              day,
-              procurementQty: product.procurementQty[idx],
-              procurementPrice: product.procurementPrice[idx],
-              salesQty: product.salesQty[idx],
-              salesPrice: product.salesPrice[idx],
-              inventory: currentInventory,
-            })
-          }
+        for (let day = 1; day <= 3; day++) {
+          const idx = day - 1
+          currentInventory = currentInventory + product.procurementQty[idx] - product.salesQty[idx]
 
-          return {
-            id: product.id,
-            name: product.name,
-            openingInventory: product.openingInventory,
-            userId: session.user.id,
-            dailyRecords: {
-              create: dailyRecords,
-            },
-          }
-        })
-
-        // Batch create all products
-        for (const productData of productsToCreate) {
-          await tx.product.create({
-            data: productData
+          dailyRecords.push({
+            day,
+            procurementQty: product.procurementQty[idx],
+            procurementPrice: product.procurementPrice[idx],
+            salesQty: product.salesQty[idx],
+            salesPrice: product.salesPrice[idx],
+            inventory: currentInventory,
           })
         }
-      }, { maxWait: 20000, timeout: 50000 })
-    } catch (e: unknown) {
-      return NextResponse.json({ where: 'prisma', error: toErrorString(e) }, { status: 500 })
-    }
 
-    return NextResponse.json({ success: true, productsCount: products.length })
-  } catch (e: unknown) {
-    return NextResponse.json({ where: 'outer', error: toErrorString(e) }, { status: 500 })
+        return {
+          id: product.id,
+          name: product.name,
+          openingInventory: product.openingInventory,
+          userId: session.user.id,
+          dailyRecords: {
+            create: dailyRecords,
+          },
+        }
+      })
+
+      // Batch create all products
+      for (const productData of productsToCreate) {
+        await tx.product.create({
+          data: productData
+        })
+      }
+    }, { maxWait: 20000, timeout: 50000 })
+
+    return NextResponse.json({ 
+      success: true, 
+      productsCount: products.length 
+    })
+  } catch (error) {
+    console.error('Upload error:', error)
+    return NextResponse.json(
+      { error: 'Failed to process file' },
+      { status: 500 }
+    )
   }
 }

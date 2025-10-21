@@ -15,6 +15,23 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (!email.trim()) {
+      setError('Please enter your email address')
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+
+    if (!password) {
+      setError('Please enter your password')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -98,9 +115,8 @@ export default function LoginPage() {
                   <input
                     id="email"
                     name="email"
-                    type="email"
+                    type="text"
                     autoComplete="email"
-                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
@@ -125,7 +141,6 @@ export default function LoginPage() {
                     name="password"
                     type="password"
                     autoComplete="current-password"
-                    required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"

@@ -43,7 +43,7 @@ export async function GET(
       id: product.id,
       name: product.name,
       openingInventory: product.openingInventory,
-      history: product.dailyRecords.map(record => ({
+      history: product.dailyRecords.map((record: typeof product.dailyRecords[0]) => ({
         day: record.day,
         inventory: record.inventory,
         procurementAmount: record.procurementQty * record.procurementPrice,

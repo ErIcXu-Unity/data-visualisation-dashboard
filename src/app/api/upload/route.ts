@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { Prisma } from '@prisma/client'
 
 interface ProductRow {
   id: string
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
     }
 
     // Use transaction to ensure data consistency
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       for (const product of products) {
         let currentInventory = product.openingInventory
 
@@ -126,10 +127,10 @@ export async function POST(request: Request) {
         // Upsert: update if exists, create if not
         await tx.product.upsert({
           where: { 
-            userId_id: {
-              userId: session.user.id,
-              id: product.id
-            }
+            userId_id: { 
+              userId: session.user.id, 
+              id: product.id 
+            } 
           },
           update: {
             name: product.name,
@@ -150,6 +151,9 @@ export async function POST(request: Request) {
           },
         })
       }
+    }, {
+      maxWait: 10000,
+      timeout: 15000,
     })
 
     return NextResponse.json({

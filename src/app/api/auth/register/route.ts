@@ -6,9 +6,38 @@ export async function POST(request: Request) {
   try {
     const { name, email, password } = await request.json()
 
-    if (!name || !email || !password) {
+    if (!name || !name.trim()) {
       return NextResponse.json(
-        { error: 'Name, email and password are required' },
+        { error: 'Please enter your full name' },
+        { status: 400 }
+      )
+    }
+
+    if (!email || !email.trim()) {
+      return NextResponse.json(
+        { error: 'Please enter your email address' },
+        { status: 400 }
+      )
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Please enter a valid email address' },
+        { status: 400 }
+      )
+    }
+
+    if (!password) {
+      return NextResponse.json(
+        { error: 'Please enter a password' },
+        { status: 400 }
+      )
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters long' },
         { status: 400 }
       )
     }

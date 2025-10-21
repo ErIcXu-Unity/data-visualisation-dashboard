@@ -15,6 +15,33 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (!name.trim()) {
+      setError('Please enter your full name')
+      return
+    }
+
+    if (!email.trim()) {
+      setError('Please enter your email address')
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+
+    if (!password) {
+      setError('Please enter a password')
+      return
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -102,7 +129,6 @@ export default function RegisterPage() {
                     name="name"
                     type="text"
                     autoComplete="name"
-                    required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
@@ -125,9 +151,8 @@ export default function RegisterPage() {
                   <input
                     id="email"
                     name="email"
-                    type="email"
+                    type="text"
                     autoComplete="email"
-                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
@@ -152,7 +177,6 @@ export default function RegisterPage() {
                     name="password"
                     type="password"
                     autoComplete="new-password"
-                    required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"

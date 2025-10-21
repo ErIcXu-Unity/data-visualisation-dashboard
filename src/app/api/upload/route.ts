@@ -107,10 +107,16 @@ export async function POST(request: Request) {
 
     try {
       await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-        for (const product of products) {
-          let currentInventory = product.openingInventory
+        // Delete all existing products for this user (cascade deletes daily records)
+        await tx.product.deleteMany({
+          where: { userId: session.user.id }
+        })
 
+        // Prepare all products with their daily records
+        const productsToCreate = products.map(product => {
+          let currentInventory = product.openingInventory
           const dailyRecords = []
+
           for (let day = 1; day <= 3; day++) {
             const idx = day - 1
             currentInventory = currentInventory + product.procurementQty[idx] - product.salesQty[idx]
@@ -125,33 +131,24 @@ export async function POST(request: Request) {
             })
           }
 
-          await tx.product.upsert({
-            where: {
-              userId_id: {
-                userId: session.user.id,
-                id: product.id
-              }
+          return {
+            id: product.id,
+            name: product.name,
+            openingInventory: product.openingInventory,
+            userId: session.user.id,
+            dailyRecords: {
+              create: dailyRecords,
             },
-            update: {
-              name: product.name,
-              openingInventory: product.openingInventory,
-              dailyRecords: {
-                deleteMany: {},
-                create: dailyRecords,
-              },
-            },
-            create: {
-              id: product.id,
-              name: product.name,
-              openingInventory: product.openingInventory,
-              userId: session.user.id,
-              dailyRecords: {
-                create: dailyRecords,
-              },
-            },
+          }
+        })
+
+        // Batch create all products
+        for (const productData of productsToCreate) {
+          await tx.product.create({
+            data: productData
           })
         }
-      }, { maxWait: 10000, timeout: 15000 })
+      }, { maxWait: 20000, timeout: 50000 })
     } catch (e: unknown) {
       return NextResponse.json({ where: 'prisma', error: toErrorString(e) }, { status: 500 })
     }

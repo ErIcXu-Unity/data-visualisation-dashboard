@@ -106,8 +106,51 @@ export async function POST(request: Request) {
     if (!products?.length) return NextResponse.json({ error: 'No valid products' }, { status: 400 })
 
     try {
-      await prisma.$transaction(async (tx) => {
-        // … 你的 upsert 逻辑 …
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        for (const product of products) {
+          let currentInventory = product.openingInventory
+
+          const dailyRecords = []
+          for (let day = 1; day <= 3; day++) {
+            const idx = day - 1
+            currentInventory = currentInventory + product.procurementQty[idx] - product.salesQty[idx]
+
+            dailyRecords.push({
+              day,
+              procurementQty: product.procurementQty[idx],
+              procurementPrice: product.procurementPrice[idx],
+              salesQty: product.salesQty[idx],
+              salesPrice: product.salesPrice[idx],
+              inventory: currentInventory,
+            })
+          }
+
+          await tx.product.upsert({
+            where: {
+              userId_id: {
+                userId: session.user.id,
+                id: product.id
+              }
+            },
+            update: {
+              name: product.name,
+              openingInventory: product.openingInventory,
+              dailyRecords: {
+                deleteMany: {},
+                create: dailyRecords,
+              },
+            },
+            create: {
+              id: product.id,
+              name: product.name,
+              openingInventory: product.openingInventory,
+              userId: session.user.id,
+              dailyRecords: {
+                create: dailyRecords,
+              },
+            },
+          })
+        }
       }, { maxWait: 10000, timeout: 15000 })
     } catch (e: unknown) {
       return NextResponse.json({ where: 'prisma', error: toErrorString(e) }, { status: 500 })
